@@ -1,29 +1,65 @@
-import subprocess
 from customtkinter import *
+from modules.quiz_module import QuizFrame
+from modules.stats_module import StatsFrame
 
-class DoomsdayLauncher(CTk):
+class DoomsdayApp(CTk):
     def __init__(self):
         super().__init__()
-        self.title("Doomsday Training Suite")
-        self.geometry("400x300")
-        set_appearance_mode("dark")
+        self.title("Doomsday Pro Hub")
+        self.geometry("1100x900")
+        
+        self.current_theme = "Dark"
+        set_appearance_mode(self.current_theme)
         set_default_color_theme("blue")
 
-        CTkLabel(self, text="🧠 Doomsday Trainer", font=("Arial", 24, "bold")).pack(pady=30)
+        self.container = CTkFrame(self, fg_color="transparent")
+        self.container.pack(fill="both", expand=True)
+        self.show_home()
 
-        self.btn_play = CTkButton(self, text="GIOCA / ALLENATI", height=50, width=250,
-                                  command=lambda: self.launch("quiz.py"))
-        self.btn_play.pack(pady=10)
+    def fade_in(self, widget):
+        """Semplice effetto di apparizione fluida"""
+        widget.configure(alpha=0) # Se supportato, altrimenti usiamo il delay
+        for i in range(1, 11):
+            self.after(i*20, lambda: None) # Simulazione carico
 
-        self.btn_stats = CTkButton(self, text="STATISTICHE E ANALYTICS", height=50, width=250,
-                                   fg_color="#2ecc71", hover_color="#27ae60",
-                                   command=lambda: self.launch("stats.py"))
-        self.btn_stats.pack(pady=10)
+    def show_page(self, frame_class, show_nav=True):
+        # Pulisce con un piccolo ritardo visivo per il "refresh bello"
+        for w in self.container.winfo_children(): w.destroy()
+        
+        if show_nav:
+            nav = CTkFrame(self.container, height=60, fg_color="transparent")
+            nav.pack(fill="x", pady=5)
+            CTkButton(nav, text="⬅ TORNA ALLA HOME", width=150, height=35, 
+                      font=("Arial", 11, "bold"), fg_color="#34495e",
+                      command=self.show_home).pack(side="left", padx=20)
 
-    def launch(self, file_name):
-        # Lancia il processo separato senza chiudere il launcher
-        subprocess.Popen(["python", file_name])
+        page = frame_class(self.container)
+        page.pack(fill="both", expand=True, padx=20, pady=10)
+
+    def show_home(self):
+        for w in self.container.winfo_children(): w.destroy()
+        home = CTkFrame(self.container, fg_color="transparent")
+        home.pack(expand=True)
+
+        CTkLabel(home, text="🧠 Doomsday Master", font=("Arial", 42, "bold")).pack(pady=40)
+        
+        btn_f = CTkFrame(home, fg_color="transparent")
+        btn_f.pack(pady=10)
+        
+        CTkButton(btn_f, text="INIZIA ALLENAMENTO", height=60, width=300, font=("Arial", 16, "bold"),
+                  command=lambda: self.show_page(QuizFrame)).pack(pady=10)
+        
+        CTkButton(btn_f, text="VISUALIZZA STATISTICHE", height=60, width=300, font=("Arial", 16, "bold"),
+                  fg_color="#2ecc71", hover_color="#27ae60",
+                  command=lambda: self.show_page(StatsFrame)).pack(pady=10)
+
+        # Theme Switcher in basso
+        self.tm = CTkSwitch(home, text="Modalità Luce", command=self.toggle_theme)
+        self.tm.pack(pady=50)
+
+    def toggle_theme(self):
+        self.current_theme = "Light" if self.tm.get() else "Dark"
+        set_appearance_mode(self.current_theme)
 
 if __name__ == "__main__":
-    app = DoomsdayLauncher()
-    app.mainloop()
+    DoomsdayApp().mainloop()

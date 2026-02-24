@@ -128,37 +128,36 @@ class DoomsdayQuiz(CTk):
         self.lbl_q = CTkLabel(self.main_container, text="", font=("Arial", 46, "bold"))
         self.lbl_q.pack(pady=20)
 
-         # --- NUOVA GRIGLIA PULSANTI (DOMENICA IN ALTO + COPPIE) ---
-        # Usiamo self.main_container se esiste, altrimenti self
+         # --- NUOVA GRIGLIA PULSANTI
+        # --- GRIGLIA PULSANTI (COPPIE + DOMENICA SOTTO) ---
         parent = getattr(self, "main_container", self)
         
         grid = CTkFrame(parent, fg_color="transparent")
         grid.pack(pady=20)
 
-        # 1. ALTRI GIORNI (A coppie da riga 1 in poi)
-        giorni = [
+        # 1. GIORNI DA LUNEDÌ A SABATO (A coppie, righe 0-2)
+        giorni_feriali = [
             (1, "Lun"), (2, "Mar"), 
             (3, "Mer"), (4, "Gio"), 
             (5, "Ven"), (6, "Sab")
         ]
-        # 2. DOMENICA (Riga 0, centrata su 2 colonne)
-        # Usiamo un colore diverso per distinguerlo come lo "0" del Doomsday
-        btn_dom = CTkButton(grid, text="Dom (0)", width=220, height=60, 
-                            font=("Arial", 16, "bold"),
-                            fg_color="#c0392b", hover_color="#962d22",
-                            command=lambda: self.check_answer(0))
-        btn_dom.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
 
-
-        for i, (valore, nome) in enumerate(giorni):
-            row_idx = (i // 2) + 1
+        for i, (valore, nome) in enumerate(giorni_feriali):
+            row_idx = i // 2
             col_idx = i % 2
             
-            # Nota: 'v=valore' nel lambda serve a "fissare" il numero corretto per ogni bottone
             btn = CTkButton(grid, text=nome, width=105, height=60, 
                             font=("Arial", 16, "bold"),
                             command=lambda v=valore: self.check_answer(v))
             btn.grid(row=row_idx, column=col_idx, padx=7, pady=7)
+
+        # 2. DOMENICA (Riga finale, centrata su 2 colonne)
+        # La mettiamo alla riga 3 (dopo le 3 righe precedenti 0,1,2)
+        btn_dom = CTkButton(grid, text="Dom (0)", width=220, height=60, 
+                            font=("Arial", 16, "bold"),
+                            fg_color="#c0392b", hover_color="#962d22",
+                            command=lambda: self.check_answer(0))
+        btn_dom.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
         # Soluzione
         self.sol_frame = CTkFrame(self.main_container, border_width=2, border_color="#e74c3c")
