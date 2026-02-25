@@ -2,16 +2,21 @@ from customtkinter import *
 from matplotlib import pyplot as plt
 from modules.quiz_module import QuizFrame
 from modules.stats_module import StatsFrame
+from theme_manager import ThemeManagerFrame
+import json
+
+CONFIG_FILE = "config.json"
 
 class DoomsdayApp(CTk):
     def __init__(self):
         super().__init__()
         self.title("Doomsday Pro Hub")
-        self.geometry("900x600")
+        self.geometry("900x800")
         
         self.current_theme = "Dark"
-        set_appearance_mode(self.current_theme)
-        set_default_color_theme("blue")
+        
+        last_theme = load_last_theme()
+        set_default_color_theme(last_theme)
 
         self.container = CTkFrame(self, fg_color="transparent")
         self.container.pack(fill="both", expand=True)
@@ -61,6 +66,8 @@ class DoomsdayApp(CTk):
         CTkButton(btn_f, text="VISUALIZZA STATISTICHE", height=60, width=300, font=("Arial", 16, "bold"),
                   fg_color="#2ecc71", hover_color="#27ae60",
                   command=lambda: self.show_page(StatsFrame)).pack(pady=10)
+        CTkButton(home, text="🎨 TEMI E COLORI", height=50, width=300,
+                  command=self.show_themes).pack(pady=10)
 
         # Theme Switcher in basso
         self.tm = CTkSwitch(home, text="Modalità Luce", command=self.toggle_theme)
@@ -69,6 +76,27 @@ class DoomsdayApp(CTk):
     def toggle_theme(self):
         self.current_theme = "Light" if self.tm.get() else "Dark"
         set_appearance_mode(self.current_theme)
+
+    def show_themes(self):
+        for w in self.container.winfo_children(): w.destroy()
+        # Passiamo self.show_home come callback per tornare indietro e rinfrescare
+        ThemeManagerFrame(self.container, self.show_home).pack(fill="both", expand=True)
+
+def save_last_theme(theme_path):
+    with open(CONFIG_FILE, "w") as f:
+        json.dump({"last_theme": theme_path}, f)
+
+def load_last_theme():
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r") as f:
+                content = f.read().strip()
+                if not content: # Se il file è vuoto
+                    return "blue"
+                return json.loads(content).get("last_theme", "blue")
+        except (json.JSONDecodeError, Exception):
+            return "blue" # Se il file è corrotto, usa il default
+    return "blue"
 
 if __name__ == "__main__":
     DoomsdayApp().mainloop()
