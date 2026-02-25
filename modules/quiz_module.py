@@ -75,7 +75,7 @@ class QuizFrame(CTkFrame):
         elapsed = round(time.perf_counter() - self.start_time, 2)
         d, m, y = self.curr_date
         # Logica rapida per corretto
-        from stats_module import calculate_doomsday_odd11 # Riutilizzo logica
+        from modules.stats_module import calculate_doomsday_odd11 # Riutilizzo logica
         dd, steps = calculate_doomsday_odd11(y)
         ans = (date(y, m, d).weekday() + 1) % 7 if self.mode == "Giorno Preciso" else dd
         
@@ -98,3 +98,13 @@ class QuizFrame(CTkFrame):
             with open("doomsday_stats_v2.json", "r") as f: data = json.load(f)
         data.append({"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "mode": m, "difficulty": d, "time": t, "correct": c})
         with open("doomsday_stats_v2.json", "w") as f: json.dump(data, f, indent=4)
+
+    def update_clock(self):
+        # Se l'app viene chiusa o cambiata pagina, winfo_exists() restituirà False
+        if self.running and self.winfo_exists():
+            try:
+                elapsed = time.perf_counter() - self.start_time
+                self.lbl_timer.configure(text=f"{elapsed:.1f}s")
+                self.after(100, self.update_clock)
+            except:
+                pass # Evita errori se la distruzione avviene durante l'esecuzione

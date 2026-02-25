@@ -1,4 +1,5 @@
 from customtkinter import *
+from matplotlib import pyplot as plt
 from modules.quiz_module import QuizFrame
 from modules.stats_module import StatsFrame
 
@@ -6,7 +7,7 @@ class DoomsdayApp(CTk):
     def __init__(self):
         super().__init__()
         self.title("Doomsday Pro Hub")
-        self.geometry("1100x900")
+        self.geometry("900x500")
         
         self.current_theme = "Dark"
         set_appearance_mode(self.current_theme)
@@ -15,6 +16,14 @@ class DoomsdayApp(CTk):
         self.container = CTkFrame(self, fg_color="transparent")
         self.container.pack(fill="both", expand=True)
         self.show_home()
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+    
+    def on_closing(self):
+        # Ferma i timer e chiudi tutto prima di uscire
+        self.running = False
+        plt.close('all')
+        self.quit() # Ferma il mainloop
+        self.destroy() # Distrugge i widget
 
     def fade_in(self, widget):
         """Semplice effetto di apparizione fluida"""
