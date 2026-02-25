@@ -37,7 +37,7 @@ class QuizFrame(CTkFrame):
             CTkButton(grid, text=name, width=110, height=60, font=("Arial", 14, "bold"), 
                       command=lambda v=val: self.check_answer(v)).grid(row=i//2, column=i%2, padx=8, pady=8)
         CTkButton(grid, text="Dom (0)", width=236, height=60, font=("Arial", 14, "bold"), 
-                  fg_color="#c0392b", hover_color="#962d22", command=lambda: self.check_answer(0)).grid(row=3, column=0, columnspan=2, pady=12)
+                      command=lambda: self.check_answer(0)).grid(row=3, column=0, columnspan=2, pady=12)
 
         self.sol_frame = CTkFrame(self, border_width=2, border_color="#e74c3c")
         self.lbl_sol = CTkLabel(self.sol_frame, text="", font=("Consolas", 13), justify="left")

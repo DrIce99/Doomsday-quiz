@@ -7,7 +7,7 @@ class DoomsdayApp(CTk):
     def __init__(self):
         super().__init__()
         self.title("Doomsday Pro Hub")
-        self.geometry("900x500")
+        self.geometry("900x600")
         
         self.current_theme = "Dark"
         set_appearance_mode(self.current_theme)

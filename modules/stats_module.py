@@ -83,31 +83,62 @@ class StatsFrame(CTkFrame):
         self.refresh_all()
 
     def refresh_all(self):
-        plt.close('all')
-        if not self.winfo_exists():
-            return
+        plt.close('all') 
         if not os.path.exists("doomsday_stats_v2.json"): return
         with open("doomsday_stats_v2.json", "r") as f: all_data = json.load(f)
         
+        # 1. FILTRO PER MODALITÀ E DIFFICOLTÀ
         data = [d for d in all_data if d["mode"] == self.filter_mode and d["difficulty"] == self.filter_diff]
-        if not data: 
+        
+        # 2. FILTRO TEMPORALE (Basato su View e Navigazione)
+        view = self.view_opt.get()
+        nav = self.nav_opt.get()
+        now = datetime.now()
+        
+        filtered_data = []
+        for d in data:
+            dt = datetime.strptime(d["timestamp"], "%Y-%m-%d %H:%M:%S")
+            keep = False
+            
+            if view == "Sempre":
+                keep = True
+            elif view == "Ultimo Giorno":
+                target_date = now.date() if nav == "Oggi" else (now - timedelta(days=1)).date()
+                if dt.date() == target_date: keep = True
+            elif view == "Ultima Settimana":
+                # Settimana corrente (0) o precedente (1)
+                weeks_ago = 0 if nav == "Questa" else 1
+                start_of_week = (now - timedelta(days=now.weekday() + 7*weeks_ago)).date()
+                end_of_week = start_of_week + timedelta(days=6)
+                if start_of_week <= dt.date() <= end_of_week: keep = True
+            elif view == "Ultimo Mese":
+                if nav == "Questo Mese":
+                    if dt.month == now.month and dt.year == now.year: keep = True
+                else: # Mese scorso
+                    last_month = now.replace(day=1) - timedelta(days=1)
+                    if dt.month == last_month.month and dt.year == last_month.year: keep = True
+            
+            if keep: filtered_data.append(d)
+
+        data = filtered_data # Sovrascriviamo con i dati filtrati per tempo
+        
+        if not data:
             for w in self.chart_c.winfo_children(): w.destroy()
+            self.stats_box.configure(state="normal"); self.stats_box.delete("0.0", "end")
+            self.stats_box.insert("0.0", "Nessun dato per questo periodo."); self.stats_box.configure(state="disabled")
             return
 
         # --- LOGICA SIDEBAR (Stats testo) ---
         self.stats_box.configure(state="normal"); self.stats_box.delete("0.0", "end")
-        txt = f"{'PERIODO':<8} | {'REC':<5} | {'AVG':<5} | {'WR%'}\n" + "-"*35 + "\n"
-        now = datetime.now()
-        for label, days in [("Oggi", 1), ("Sett.", 7), ("Mese", 30), ("Sempre", 9999)]:
-            filt = [d for d in data if (now - datetime.strptime(d["timestamp"], "%Y-%m-%d %H:%M:%S")).days < days]
-            cor = [d["time"] for d in filt if d["correct"]]
-            wr = f"{(len(cor)/len(filt)*100):.0f}%" if filt else "--"
-            best = f"{min(cor):.1f}s" if cor else "--"
-            avg = f"{sum(cor)/len(cor):.1f}s" if cor else "--"
-            txt += f"{label:<8} | {best:<5} | {avg:<5} | {wr}\n"
+        txt = f"VISTA: {nav}\n" + "-"*35 + "\n"
+        cor = [d["time"] for d in data if d["correct"]]
+        wr = f"{(len(cor)/len(data)*100):.0f}%" if data else "0%"
+        best = f"{min(cor):.1f}s" if cor else "--"
+        avg = f"{sum(cor)/len(cor):.1f}s" if cor else "--"
+        txt += f"RECORD: {best}\nMEDIA:  {avg}\nWINRATE: {wr}\n"
         self.stats_box.insert("end", txt); self.stats_box.configure(state="disabled")
 
-        # --- GRAFICO AVANZATO ---
+        # --- GRAFICO ---
         for w in self.chart_c.winfo_children(): w.destroy()
         plt.style.use('dark_background')
         fig, ax1 = plt.subplots(figsize=(5, 4), dpi=100)
@@ -116,9 +147,8 @@ class StatsFrame(CTkFrame):
         g_t = collections.defaultdict(list)
         mode = self.group_opt.get()
         plot_dates_dict = {}
-        
-        # 1. Raggruppiamo TUTTE le chiavi temporali presenti nei dati
         all_keys = []
+
         for d in data:
             dt = datetime.strptime(d["timestamp"], "%Y-%m-%d %H:%M:%S")
             if mode == "Giorno": key = dt.strftime("%d/%m")
@@ -126,47 +156,30 @@ class StatsFrame(CTkFrame):
             else: key = d["timestamp"][-8:]
             
             if key not in all_keys: all_keys.append(key)
-            if d["correct"]: 
-                g_t[key].append(d["time"])
-            if key not in plot_dates_dict: 
-                plot_dates_dict[key] = dt
+            if d["correct"]: g_t[key].append(d["time"])
+            if key not in plot_dates_dict: plot_dates_dict[key] = dt
 
-        # 2. Prepariamo y_vals: conterrà il tempo medio o None se non ci sono corretti
-        y_vals = []
-        for k in all_keys:
-            if g_t[k]:
-                y_vals.append(sum(g_t[k])/len(g_t[k]))
-            else:
-                y_vals.append(None) # Qui creiamo il "buco"
-        
+        y_vals = [sum(g_t[k])/len(g_t[k]) if g_t[k] else None for k in all_keys]
         is_continuous = self.sw_continuity.get()
         
         if is_continuous:
-            # Rimuoviamo i None per unire i punti
             plot_keys = [all_keys[i] for i in range(len(all_keys)) if y_vals[i] is not None]
             plot_y = [v for v in y_vals if v is not None]
         else:
-            # Teniamo i None: Matplotlib interromperà la linea gialla
             plot_keys = all_keys
             plot_y = y_vals
 
-        if not plot_y or all(v is None for v in plot_y): return
+        if plot_y:
+            ax1.plot(plot_keys, plot_y, color='yellow', marker='o', label="Tempo", linewidth=2)
+            
+            # Media Mobile (solo se ci sono almeno 2 punti)
+            valid_y = [v for v in plot_y if v is not None]
+            if len(valid_y) > 1:
+                y_ma = [valid_y[0]] + [(valid_y[i] + valid_y[i-1])/2 for i in range(1, len(valid_y))]
+                valid_keys = [plot_keys[i] for i in range(len(plot_y)) if plot_y[i] is not None]
+                ax1.plot(valid_keys, y_ma, color='#3b8ed0', linestyle='--', alpha=0.7, label="Media (n, n-1)")
 
-        # 3. Disegno Linea Gialla
-        ax1.plot(plot_keys, plot_y, color='yellow', marker='o', label="Tempo", linewidth=2)
-        
-        # 4. Media Mobile (solo su punti validi)
-        valid_y = [v for v in plot_y if v is not None]
-        if len(valid_y) > 1:
-            y_ma = [valid_y[0]]
-            for i in range(1, len(valid_y)):
-                y_ma.append((valid_y[i] + valid_y[i-1]) / 2)
-            # Se non è continuo, la media mobile potrebbe non allinearsi bene, 
-            # quindi la disegniamo solo sui punti esistenti
-            plot_keys_valid = [plot_keys[i] for i in range(len(plot_y)) if plot_y[i] is not None]
-            ax1.plot(plot_keys_valid, y_ma, color='#3b8ed0', linestyle='--', alpha=0.7, label="Media (n, n-1)")
-
-        # 5. Separatori Temporali
+        # Separatori
         last_dt = None
         for i, k in enumerate(plot_keys):
             curr_dt = plot_dates_dict.get(k)
@@ -174,17 +187,11 @@ class StatsFrame(CTkFrame):
                 if curr_dt.date() != last_dt.date():
                     ax1.axvline(i - 0.5, color='gray', alpha=0.2)
                 if curr_dt.isocalendar()[1] != last_dt.isocalendar()[1]:
-                    ax1.axvline(i - 0.5, color='#555555', alpha=0.6, linewidth=1.5)
-                if curr_dt.month != last_dt.month:
-                    ax1.axvline(i - 0.5, color='white', alpha=0.4, linestyle='--')
+                    ax1.axvline(i - 0.5, color='#555555', alpha=0.6)
             last_dt = curr_dt
 
-        ax1.set_ylabel("Secondi", color='yellow', fontweight='bold')
         ax1.tick_params(axis='x', rotation=35, labelsize=7)
-        ax1.legend(loc='upper right', fontsize='x-small', framealpha=0.3)
-
         fig.tight_layout()
         canvas = FigureCanvasTkAgg(fig, master=self.chart_c)
         canvas.get_tk_widget().pack(fill="both", expand=True)
         canvas.draw()
-
