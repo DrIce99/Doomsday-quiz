@@ -2,6 +2,7 @@ from customtkinter import *
 from matplotlib import pyplot as plt
 from modules.quiz_module import QuizFrame
 from modules.stats_module import StatsFrame
+from utils.config_util import get_config, save_config
 from theme_manager import ThemeManagerFrame
 import json
 
