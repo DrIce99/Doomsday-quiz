@@ -1,9 +1,11 @@
 import json, os, collections
-from customtkinter import *
-from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.dates as mdates
+from customtkinter import *
+from datetime import date, datetime, timedelta
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from utils.calendar_util import CalendarPicker
 
 def calculate_doomsday_odd11(y):
     anchor = {0: 2, 1: 0, 2: 5, 3: 3}[(y // 100) % 4]
@@ -51,12 +53,13 @@ class StatsFrame(CTkFrame):
         self.sw_continuity.pack(pady=10)
 
         CTkLabel(self.side, text="Vista Temporale:", font=("Arial", 12)).pack(pady=(5,0))
-        self.view_opt = CTkOptionMenu(self.side, values=["Sempre", "Ultimo Giorno", "Ultima Settimana", "Ultimo Mese"], command=self.update_nav_options)
+        self.view_opt = CTkOptionMenu(self.side, values=["Sempre", "Giorno", "Settimana", "Mese"], command=lambda _: self.refresh_all())
         self.view_opt.set("Sempre"); self.view_opt.pack(pady=5)
 
         CTkLabel(self.side, text="Seleziona Periodo:", font=("Arial", 12)).pack(pady=(5,0))
-        self.nav_opt = CTkOptionMenu(self.side, values=["Tutto lo storico"], command=lambda _: self.refresh_all())
-        self.nav_opt.set("Tutto lo storico"); self.nav_opt.pack(pady=5)
+        self.btn_calendar = CTkButton(self.side, text="📅 Scegli Data", command=self.open_calendar)
+        self.btn_calendar.pack(pady=5)
+        self.selected_date_str = date.today().strftime("%Y-%m-%d")
 
         CTkLabel(self.side, text="Raggruppamento:", font=("Arial", 12)).pack(pady=(5,0))
         self.group_opt = CTkOptionMenu(self.side, values=["Nessuno", "Giorno", "Settimana"], command=lambda _: self.refresh_all())
@@ -76,8 +79,8 @@ class StatsFrame(CTkFrame):
     def update_nav_options(self, choice):
         # Logica per popolare il menu "Seleziona Periodo" in base alla vista
         if choice == "Sempre": self.nav_opt.configure(values=["Tutto lo storico"])
-        elif choice == "Ultimo Giorno": self.nav_opt.configure(values=["Oggi", "Ieri"])
-        elif choice == "Ultima Settimana": self.nav_opt.configure(values=["Questa", "Scorsa"])
+        elif choice == "Giorno": self.nav_opt.configure(values=["Oggi", "Ieri"])
+        elif choice == "Settimana": self.nav_opt.configure(values=["Questa", "Scorsa"])
         else: self.nav_opt.configure(values=["Questo Mese", "Mese Scorso"])
         self.nav_opt.set(self.nav_opt.cget("values")[0])
         self.refresh_all()
@@ -92,31 +95,24 @@ class StatsFrame(CTkFrame):
         
         # 2. FILTRO TEMPORALE (Basato su View e Navigazione)
         view = self.view_opt.get()
-        nav = self.nav_opt.get()
+        anchor = getattr(self, "anchor_date", date.today())
         now = datetime.now()
         
         filtered_data = []
         for d in data:
-            dt = datetime.strptime(d["timestamp"], "%Y-%m-%d %H:%M:%S")
+            dt = datetime.strptime(d["timestamp"], "%Y-%m-%d %H:%M:%S").date()
             keep = False
             
-            if view == "Sempre":
-                keep = True
-            elif view == "Ultimo Giorno":
-                target_date = now.date() if nav == "Oggi" else (now - timedelta(days=1)).date()
-                if dt.date() == target_date: keep = True
-            elif view == "Ultima Settimana":
-                # Settimana corrente (0) o precedente (1)
-                weeks_ago = 0 if nav == "Questa" else 1
-                start_of_week = (now - timedelta(days=now.weekday() + 7*weeks_ago)).date()
-                end_of_week = start_of_week + timedelta(days=6)
-                if start_of_week <= dt.date() <= end_of_week: keep = True
-            elif view == "Ultimo Mese":
-                if nav == "Questo Mese":
-                    if dt.month == now.month and dt.year == now.year: keep = True
-                else: # Mese scorso
-                    last_month = now.replace(day=1) - timedelta(days=1)
-                    if dt.month == last_month.month and dt.year == last_month.year: keep = True
+            if view == "Sempre" or view == "Giorno":
+                # Se è "Sempre", il calendario agisce come selettore di giorno singolo
+                if dt == anchor: keep = True
+            elif view == "Settimana":
+                # Range di 7 giorni che finisce alla data scelta
+                start_range = anchor - timedelta(days=6)
+                if start_range <= dt <= anchor: keep = True
+            elif view == "Mese":
+                # Tutti i dati del mese solare della data scelta
+                if dt.month == anchor.month and dt.year == anchor.year: keep = True
             
             if keep: filtered_data.append(d)
 
@@ -130,7 +126,14 @@ class StatsFrame(CTkFrame):
 
         # --- LOGICA SIDEBAR (Stats testo) ---
         self.stats_box.configure(state="normal"); self.stats_box.delete("0.0", "end")
-        txt = f"VISTA: {nav}\n" + "-"*35 + "\n"
+        view = self.view_opt.get()
+        if view == "Giorno":
+            header_title = f"DATA: {self.selected_date_str}"
+        else:
+            header_title = f"VISTA: {view}"
+
+        txt = f"{header_title}\n" + "-"*35 + "\n"
+        
         cor = [d["time"] for d in data if d["correct"]]
         wr = f"{(len(cor)/len(data)*100):.0f}%" if data else "0%"
         best = f"{min(cor):.1f}s" if cor else "--"
@@ -195,3 +198,22 @@ class StatsFrame(CTkFrame):
         canvas = FigureCanvasTkAgg(fig, master=self.chart_c)
         canvas.get_tk_widget().pack(fill="both", expand=True)
         canvas.draw()
+
+    def open_calendar(self):
+        CalendarPicker(self, self.selected_date_str, self.on_date_selected)
+
+    def on_date_selected(self, selected_date):
+        # selected_date è un oggetto datetime.date
+        self.anchor_date = selected_date
+        view = self.view_opt.get()
+        
+        # Aggiorna il testo del pulsante per riflettere il periodo
+        if view == "Settimana":
+            start = self.anchor_date - timedelta(days=6)
+            self.btn_calendar.configure(text=f"📅 {start.strftime('%d/%m')} - {self.anchor_date.strftime('%d/%m')}")
+        elif view == "Mese":
+            self.btn_calendar.configure(text=f"📅 Mese: {self.anchor_date.strftime('%b %Y')}")
+        else:
+            self.btn_calendar.configure(text=f"📅 Giorno: {self.anchor_date.strftime('%Y-%m-%d')}")
+            
+        self.refresh_all()
