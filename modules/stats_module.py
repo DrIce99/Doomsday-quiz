@@ -153,6 +153,7 @@ class StatsFrame(CTkFrame):
         fig.patch.set_facecolor('#1e1e1e'); ax1.set_facecolor('#1e1e1e')
         
         g_t = collections.defaultdict(list)
+        g_w = collections.defaultdict(list)
         mode = self.group_opt.get()
         plot_dates_dict = {}
         all_keys = []
@@ -164,28 +165,48 @@ class StatsFrame(CTkFrame):
             else: key = d["timestamp"][-8:]
             
             if key not in all_keys: all_keys.append(key)
+            if key not in plot_dates_dict:
+                plot_dates_dict[key] = dt
             if d["correct"]: g_t[key].append(d["time"])
-            if key not in plot_dates_dict: plot_dates_dict[key] = dt
-
-        y_vals = [sum(g_t[k])/len(g_t[k]) if g_t[k] else None for k in all_keys]
-        is_continuous = self.sw_continuity.get()
-        
-        if is_continuous:
-            plot_keys = [all_keys[i] for i in range(len(all_keys)) if y_vals[i] is not None]
-            plot_y = [v for v in y_vals if v is not None]
-        else:
-            plot_keys = all_keys
-            plot_y = y_vals
-
-        if plot_y:
-            ax1.plot(plot_keys, plot_y, color='yellow', label="Tempo", linewidth=2)
+            # if key not in plot_dates_dict: plot_dates_dict[key] = dt
+            g_w[key].append(d["correct"])
             
-            # Media Mobile (solo se ci sono almeno 2 punti)
-            valid_y = [v for v in plot_y if v is not None]
-            if len(valid_y) > 1:
-                y_ma = [valid_y[0]] + [(valid_y[i] + valid_y[i-1])/2 for i in range(1, len(valid_y))]
-                valid_keys = [plot_keys[i] for i in range(len(plot_y)) if plot_y[i] is not None]
-                ax1.plot(valid_keys, y_ma, color='#3b8ed0', linestyle='--', alpha=0.7, label="Media (n, n-1)")
+        total_correct = 0
+        total_attempts = 0
+
+        plot_keys = []
+        plot_y_temps = []
+        plot_y_winrate = []
+        total_correct = 0
+        total_attempts = 0
+        is_continuous = self.sw_continuity.get()
+
+        for k in all_keys:
+            # 1. BACKEND: Calcolo sempre (anche se non mostro il punto)
+            correct_in_this_point = sum(1 for x in g_w[k] if x)
+            attempts_in_this_point = len(g_w[k])
+            
+            total_correct += correct_in_this_point
+            total_attempts += attempts_in_this_point
+            
+            # Calcolo winrate cumulativo (con protezione zero)
+            current_wr = (total_correct / total_attempts * 100) if total_attempts > 0 else 0
+            
+            # 2. FRONTEND: Decidiamo se mostrare il punto
+            avg_t = sum(g_t[k])/len(g_t[k]) if g_t[k] else None
+            
+            # SE LA CONTINUITÀ È ATTIVA:
+            # Se non c'è un tempo (risposta errata), saltiamo il punto del GRAFICO
+            # ma il winrate è già stato aggiornato nel backend per il punto successivo!
+            if self.sw_continuity.get() and avg_t is None:
+                continue
+            
+            # Altrimenti (o se non c'è continuità), aggiungiamo il punto
+            plot_keys.append(k)
+            plot_y_temps.append(avg_t)
+            plot_y_winrate.append(current_wr)
+
+        # y_vals = [sum(g_t[k])/len(g_t[k]) if g_t[k] else None for k in all_keys]
 
         # Separatori
         last_dt = None
@@ -203,6 +224,45 @@ class StatsFrame(CTkFrame):
         canvas = FigureCanvasTkAgg(fig, master=self.chart_c)
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True)
+        
+        # Asse Sinistro: Tempo (Linea Gialla)
+        if plot_y_temps:
+            ax1.plot(plot_keys,
+                    plot_y_temps,
+                    color='yellow',
+                    linewidth=2,
+                    label="Tempo")
+
+            # --- PALLINI SOLO SE NON CONTINUA ---
+            if not self.sw_continuity.get():
+                isolated_x = []
+                isolated_y = []
+
+                for i in range(len(plot_y_temps)):
+                    prev_valid = i > 0 and plot_y_temps[i-1] is not None
+                    next_valid = i < len(plot_y_temps)-1 and plot_y_temps[i+1] is not None
+
+                    if not prev_valid and not next_valid:
+                        isolated_x.append(plot_keys[i])
+                        isolated_y.append(plot_y_temps[i])
+
+                ax1.scatter(isolated_x,
+                            isolated_y,
+                            color='yellow',
+                            s=10,
+                            zorder=5)
+    
+        # Asse Destro: Winrate % (Linea Verde)
+        ax2 = ax1.twinx()
+        if plot_y_winrate:
+            ax2.plot(plot_keys, plot_y_winrate, color='#2ecc71',
+                    linestyle='--', alpha=0.8, label="Winrate %")
+            ax2.set_ylabel("Winrate %", color='#2ecc71', fontsize=9)
+            ax2.tick_params(axis='y', labelcolor='#2ecc71')
+            ax2.set_ylim(0, 110)
+        
+        ax1.tick_params(axis='x', rotation=35, labelsize=7)
+        fig.tight_layout()
 
     def open_calendar(self):
         CalendarPicker(self, self.selected_date_str, self.on_date_selected)
