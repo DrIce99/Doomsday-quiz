@@ -73,7 +73,8 @@ class StatsFrame(CTkFrame):
         self.chart_c.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
     def update_f(self, _=None):
-        self.filter_mode = self.seg_m.get(); self.filter_diff = self.seg_d.get().lower()
+        self.filter_mode = self.seg_m.get()
+        self.filter_diff = self.seg_d.get().lower()
         self.refresh_all()
 
     def update_nav_options(self, choice):
@@ -87,6 +88,8 @@ class StatsFrame(CTkFrame):
 
     def refresh_all(self):
         plt.close('all') 
+        for w in self.chart_c.winfo_children():
+            w.destroy()
         if not os.path.exists("doomsday_stats_v2.json"): return
         with open("doomsday_stats_v2.json", "r") as f: all_data = json.load(f)
         
@@ -103,7 +106,9 @@ class StatsFrame(CTkFrame):
             dt = datetime.strptime(d["timestamp"], "%Y-%m-%d %H:%M:%S").date()
             keep = False
             
-            if view == "Sempre" or view == "Giorno":
+            if view == "Sempre":
+                keep = True
+            elif view == "Giorno":
                 # Se è "Sempre", il calendario agisce come selettore di giorno singolo
                 if dt == anchor: keep = True
             elif view == "Settimana":
@@ -173,7 +178,7 @@ class StatsFrame(CTkFrame):
             plot_y = y_vals
 
         if plot_y:
-            ax1.plot(plot_keys, plot_y, color='yellow', marker='o', label="Tempo", linewidth=2)
+            ax1.plot(plot_keys, plot_y, color='yellow', label="Tempo", linewidth=2)
             
             # Media Mobile (solo se ci sono almeno 2 punti)
             valid_y = [v for v in plot_y if v is not None]
@@ -196,8 +201,8 @@ class StatsFrame(CTkFrame):
         ax1.tick_params(axis='x', rotation=35, labelsize=7)
         fig.tight_layout()
         canvas = FigureCanvasTkAgg(fig, master=self.chart_c)
-        canvas.get_tk_widget().pack(fill="both", expand=True)
         canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
 
     def open_calendar(self):
         CalendarPicker(self, self.selected_date_str, self.on_date_selected)

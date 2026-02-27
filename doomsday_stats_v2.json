@@ -712,5 +712,12 @@
         "difficulty": "facile",
         "time": 8.18,
         "correct": true
+    },
+    {
+        "timestamp": "2026-02-27 09:26:25",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 15.98,
+        "correct": true
     }
 ]
