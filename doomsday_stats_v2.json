@@ -1006,5 +1006,82 @@
         "difficulty": "facile",
         "time": 15.04,
         "correct": true
+    },
+    {
+        "timestamp": "2026-03-01 20:15:42",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 13.02,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-01 20:15:59",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 15.64,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-01 20:16:07",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 7.56,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-01 20:16:22",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 13.13,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-01 20:16:43",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 18.85,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-01 20:16:58",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 12.48,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-01 20:17:10",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 11.46,
+        "correct": false
+    },
+    {
+        "timestamp": "2026-03-01 20:17:21",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 5.91,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-01 20:17:30",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 8.07,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-01 20:17:47",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 15.41,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-01 20:17:54",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 6.47,
+        "correct": true
     }
 ]
