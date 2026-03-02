@@ -1083,5 +1083,145 @@
         "difficulty": "facile",
         "time": 6.47,
         "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:42:14",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 5.84,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:42:18",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 3.03,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:42:24",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 5.84,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:42:34",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 9.3,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:42:40",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 5.09,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:42:50",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 9.41,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:42:58",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 7.11,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:43:29",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 12.36,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:43:53",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 23.25,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:44:03",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 8.82,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:44:18",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 14.15,
+        "correct": false
+    },
+    {
+        "timestamp": "2026-03-02 20:44:56",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 13.78,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:45:08",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 10.88,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:45:20",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 11.06,
+        "correct": false
+    },
+    {
+        "timestamp": "2026-03-02 20:45:44",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 8.95,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:45:56",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 10.22,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:46:08",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 10.84,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:46:23",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 14.34,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:46:44",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 19.73,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-02 20:47:01",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 13.23,
+        "correct": true
     }
 ]
