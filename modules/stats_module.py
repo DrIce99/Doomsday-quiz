@@ -4,8 +4,9 @@ import matplotlib.dates as mdates
 from customtkinter import *
 from datetime import date, datetime, timedelta
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from managers.condition_manager import *
 
+from managers.condition_manager import *
+from logics.logic_impact import *
 from utils.calendar_util import CalendarPicker
 
 def calculate_doomsday_odd11(y):
@@ -154,6 +155,30 @@ class StatsFrame(CTkFrame):
         txt += f"RECORD: {best}\nMEDIA:  {avg}\nWINRATE: {wr}\n"
         self.stats_box.insert("end", txt); self.stats_box.configure(state="disabled")
 
+        all_conds = load_conditions()
+        impacts, g_avg = calculate_impacts(data, all_conds)
+
+        recent_avg, today_avg, perc, margine, sign = calculate_trend_metrics(data)
+
+        if impacts:
+            txt += "\n" + "="*20 + "\nIMPATTO CONDIZIONI:\n"
+            for imp in impacts:
+                # Colore/Simbolo in base al peggioramento o miglioramento
+                # Se diff > 0 significa che ci metti più tempo (peggio)
+                icon = "⚠️" if imp["diff"] > 0 else "🚀"
+                sign = "+" if imp["diff"] > 0 else ""
+                txt += f"{icon} {imp['label']}: {imp['avg']:.1f}s ({sign}{imp['diff']:.1f}s)\n"
+                txt += f"   (su {imp['count']} sessioni)\n"
+        
+        txt += f"\nTREND RECENTE (7gg): {recent_avg:.1f}s\n"
+        txt += f"PERFORMANCE OGGI: {today_avg:.1f}s ({sign}{perc:.1f}%)\n"
+        txt += f"MARGINE DI MIGLIORAMENTO: {margine:.1f}%\n"
+        
+        self.stats_box.configure(state="normal")
+        self.stats_box.delete("0.0", "end")
+        self.stats_box.insert("0.0", txt)
+        self.stats_box.configure(state="disabled")
+
         # --- GRAFICO ---
         for w in self.chart_c.winfo_children(): w.destroy()
         plt.style.use('dark_background')
@@ -284,6 +309,15 @@ class StatsFrame(CTkFrame):
                             s=10,
                             zorder=5)
     
+        # --- MEDIA MOBILE (Trend di miglioramento) ---
+        window = 5 # Calcola la media ogni 5 sessioni
+        if len(plot_y_temps) > window:
+            # Calcoliamo la media mobile semplice
+            sma = [sum(plot_y_temps[i-window:i])/window for i in range(window, len(plot_y_temps)+1)]
+            # La plottiamo sopra la linea gialla
+            ax1.plot(plot_keys[window-1:], sma, color='#3498db', 
+                    linestyle=':', linewidth=2, label="Trend (SMA 5)")
+
         # Asse Destro: Winrate % (Linea Verde)
         ax2 = ax1.twinx()
         if plot_y_winrate:
@@ -327,3 +361,30 @@ class StatsFrame(CTkFrame):
             save_condition(self.selected_date_str, choice)
             # Forziamo il refresh per mostrare il colore nel grafico e aggiornare il riassunto
             self.refresh_all()
+    
+    def get_trend_analysis(all_data, days=7):
+        # 1. Prendi solo i dati degli ultimi 'days' giorni (esclusa oggi)
+        today = date.today()
+        start_trend = today - timedelta(days=days)
+        
+        recent_times = [
+            d["time"] for d in all_data 
+            if start_trend <= datetime.strptime(d["timestamp"], "%Y-%m-%d %H:%M:%S").date() < today
+            and d["correct"]
+        ]
+        
+        # 2. Prendi i dati di OGGI
+        today_times = [
+            d["time"] for d in all_data 
+            if datetime.strptime(d["timestamp"], "%Y-%m-%d %H:%M:%S").date() == today
+            and d["correct"]
+        ]
+        
+        recent_avg = sum(recent_times) / len(recent_times) if recent_times else None
+        today_avg = sum(today_times) / len(today_times) if today_times else None
+        
+        if recent_avg and today_avg:
+            diff = today_avg - recent_avg
+            perc = (diff / recent_avg) * 100
+            return today_avg, recent_avg, diff, perc
+        return None
