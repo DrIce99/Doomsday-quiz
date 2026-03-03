@@ -4,6 +4,7 @@ import matplotlib.dates as mdates
 from customtkinter import *
 from datetime import date, datetime, timedelta
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from managers.condition_manager import *
 
 from utils.calendar_util import CalendarPicker
 
@@ -46,6 +47,13 @@ class StatsFrame(CTkFrame):
         # 3. SIDEBAR (Creata PRIMA degli elementi che contiene)
         self.side = CTkFrame(self.main_c, width=320)
         self.side.pack(side="left", fill="y", padx=10, pady=10)
+        
+        CTkLabel(self.side, text="Condizione Giorno Selezionato:", font=("Arial", 12, "bold")).pack(pady=(20,0))
+        self.cond_opt = CTkOptionMenu(self.side, 
+                                    values=["Rimuovi"] + list(DEFAULT_CONDITIONS.keys()),
+                                    command=self.update_day_condition)
+        self.cond_opt.set("Seleziona...")
+        self.cond_opt.pack(pady=5)
         
         # --- ORA PUOI AGGIUNGERE LO SWITCH A SELF.SIDE ---
         self.sw_continuity = CTkSwitch(self.side, text="Linea Continua", command=lambda: self.refresh_all())
@@ -90,8 +98,8 @@ class StatsFrame(CTkFrame):
         plt.close('all') 
         for w in self.chart_c.winfo_children():
             w.destroy()
-        if not os.path.exists("doomsday_stats_v2.json"): return
-        with open("doomsday_stats_v2.json", "r") as f: all_data = json.load(f)
+        if not os.path.exists("data/doomsday_stats_v2.json"): return
+        with open("data/doomsday_stats_v2.json", "r") as f: all_data = json.load(f)
         
         # 1. FILTRO PER MODALITÀ E DIFFICOLTÀ
         data = [d for d in all_data if d["mode"] == self.filter_mode and d["difficulty"] == self.filter_diff]
@@ -208,6 +216,30 @@ class StatsFrame(CTkFrame):
 
         # y_vals = [sum(g_t[k])/len(g_t[k]) if g_t[k] else None for k in all_keys]
 
+        cond_data = load_conditions()
+        
+        for i, k in enumerate(plot_keys):
+            dt = plot_dates_dict.get(k)
+            if not dt:
+                continue
+
+            date_str = dt.strftime("%Y-%m-%d")
+
+            if date_str in cond_data:
+                c = cond_data[date_str]["color"]
+
+                ax1.axvspan(i - 0.5, i + 0.5,
+                            color=c,
+                            alpha=0.15,
+                            zorder=0)
+
+                ax1.scatter(i, 1,
+                            color=c,
+                            marker='v',
+                            s=40,
+                            transform=ax1.get_xaxis_transform(),
+                            zorder=10)
+
         # Separatori
         last_dt = None
         for i, k in enumerate(plot_keys):
@@ -269,7 +301,13 @@ class StatsFrame(CTkFrame):
 
     def on_date_selected(self, selected_date):
         # selected_date è un oggetto datetime.date
+        self.selected_date_str = selected_date.strftime("%Y-%m-%d")
         self.anchor_date = selected_date
+        
+        conds = load_conditions()
+        current_cond = conds.get(self.selected_date_str, {}).get("label", "Seleziona...")
+        self.cond_opt.set(current_cond)
+        
         view = self.view_opt.get()
         
         # Aggiorna il testo del pulsante per riflettere il periodo
@@ -282,3 +320,10 @@ class StatsFrame(CTkFrame):
             self.btn_calendar.configure(text=f"📅 Giorno: {self.anchor_date.strftime('%Y-%m-%d')}")
             
         self.refresh_all()
+        
+    def update_day_condition(self, choice):
+        # Usiamo la data selezionata dal calendario (già salvata in self.selected_date_str)
+        if hasattr(self, "selected_date_str"):
+            save_condition(self.selected_date_str, choice)
+            # Forziamo il refresh per mostrare il colore nel grafico e aggiornare il riassunto
+            self.refresh_all()

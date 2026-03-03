@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime, date
 from customtkinter import *
+from managers.condition_manager import load_conditions
 
 class CalendarPicker(CTkToplevel):
     def __init__(self, master, current_selection, callback, **kwargs):
@@ -20,8 +21,8 @@ class CalendarPicker(CTkToplevel):
         self.setup_ui()
 
     def load_played_dates(self):
-        if not os.path.exists("doomsday_stats_v2.json"): return set()
-        with open("doomsday_stats_v2.json", "r") as f:
+        if not os.path.exists("data/doomsday_stats_v2.json"): return set()
+        with open("data/doomsday_stats_v2.json", "r") as f:
             data = json.load(f)
             return {datetime.strptime(d["timestamp"], "%Y-%m-%d %H:%M:%S").date() for d in data}
 
@@ -49,29 +50,45 @@ class CalendarPicker(CTkToplevel):
         bg_color = ThemeManager.theme["CTkFrame"]["fg_color"]
 
         cal = calendar.monthcalendar(self.view_date.year, self.view_date.month)
+        cond_data = load_conditions()
+        
         for r, week in enumerate(cal):
             for c, day in enumerate(week):
                 if day == 0: continue
                 
                 cur_date = date(self.view_date.year, self.view_date.month, day)
                 is_played = cur_date in self.data_dates
+                cur_date_str = cur_date.strftime("%Y-%m-%d")
                 
                 # LOGICA COLORI CORRETTA
                 # Se giocato: Verde. Se non giocato: Trasparente (usa il colore del frame)
-                color = "#2ecc71" if is_played else "transparent"
+                fg_color = "#2ecc71" if is_played else "transparent"
                 
                 # Se non giocato, il bordo deve avere lo stesso colore dello sfondo
                 # per evitare il crash di Tkinter
-                b_color = "white" if is_played else bg_color
-                border = 1 if is_played else 0
+                # Bordo condizione (se esiste)
+                if cur_date_str in cond_data:
+                    border_color = cond_data[cur_date_str]["color"]
+                    border_width = 3
+                else:
+                    border_color = "white" if is_played else ThemeManager.theme["CTkFrame"]["fg_color"]
+                    border_width = 1 if is_played else 0
                 
-                btn = CTkButton(grid, text=str(day), width=35, height=35, 
-                                fg_color=color, 
-                                border_width=border,
-                                border_color=b_color, # Niente più "transparent" qui
-                                hover_color="#3b8ed0",
-                                command=lambda d=cur_date: self.select_date(d))
+                btn = CTkButton(
+                        grid,
+                        text=str(day),
+                        width=35,
+                        height=35,
+                        fg_color=fg_color,
+                        border_width=border_width,
+                        border_color=border_color,
+                        font=("Arial", 12),
+                        hover_color="#3b8ed0",
+                        command=lambda d=cur_date: self.select_date(d)
+                    )
                 btn.grid(row=r+1, column=c, padx=2, pady=2)
+
+                
 
     def prev_month(self):
         m, y = (self.view_date.month - 1, self.view_date.year) if self.view_date.month > 1 else (12, self.view_date.year - 1)

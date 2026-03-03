@@ -2,7 +2,7 @@ from customtkinter import *
 from matplotlib import pyplot as plt
 from modules.quiz_module import QuizFrame
 from modules.stats_module import StatsFrame
-from theme_manager import ThemeManagerFrame
+from managers.theme_manager import ThemeManagerFrame
 import json
 
 CONFIG_FILE = "config.json"
