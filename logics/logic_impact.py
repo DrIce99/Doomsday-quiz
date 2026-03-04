@@ -3,28 +3,43 @@ import collections
 def calculate_impacts(all_data, cond_data):
     # Raggruppa i tempi per etichetta di condizione
     stats_by_cond = collections.defaultdict(list)
+    results_by_cond = collections.defaultdict(list)
+    times_by_cond = collections.defaultdict(list)
     global_times = [d["time"] for d in all_data if d["correct"]]
     global_avg = sum(global_times) / len(global_times) if global_times else 0
+    global_wr = (len(global_times) / len(all_data) * 100) if all_data else 0
 
     for d in all_data:
         # Prendi solo la data dal timestamp (YYYY-MM-DD)
         date_key = d["timestamp"].split(" ")[0]
-        if date_key in cond_data and d["correct"]:
+        if date_key in cond_data:
             label = cond_data[date_key]["label"]
-            stats_by_cond[label].append(d["time"])
+            results_by_cond[label].append(d["correct"])
+            if d["correct"]:
+                times_by_cond[label].append(d["time"])
 
     impact_results = []
-    for label, times in stats_by_cond.items():
-        avg = sum(times) / len(times)
-        diff = avg - global_avg
+    for label in results_by_cond:
+        # Calcolo Tempo Medio
+        times = times_by_cond[label]
+        avg = sum(times) / len(times) if times else 0
+        diff_time = avg - global_avg
+        
+        # Calcolo Winrate specifico della condizione
+        attempts = results_by_cond[label]
+        wr = (sum(1 for x in attempts if x) / len(attempts)) * 100
+        diff_wr = wr - global_wr # Scostamento dal winrate abituale
+        
         impact_results.append({
             "label": label,
             "avg": avg,
-            "diff": diff,
-            "count": len(times)
+            "diff_time": diff_time,
+            "wr": wr,
+            "diff_wr": diff_wr,
+            "count": len(attempts)
         })
     
-    return impact_results, global_avg
+    return impact_results, global_avg, global_wr
 
 def calculate_trend_metrics(all_data):
     from datetime import datetime, date, timedelta

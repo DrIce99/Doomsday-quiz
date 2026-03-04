@@ -10,7 +10,7 @@ CONFIG_FILE = "config.json"
 class DoomsdayApp(CTk):
     def __init__(self):
         super().__init__()
-        self.title("Doomsday Pro Hub")
+        self.title("Doomsday Hub")
         self.geometry("900x800")
         
         self.current_theme = "Dark"
@@ -55,7 +55,7 @@ class DoomsdayApp(CTk):
         home = CTkFrame(self.container, fg_color="transparent")
         home.pack(expand=True)
 
-        CTkLabel(home, text="🧠 Doomsday Master", font=("Arial", 42, "bold")).pack(pady=40)
+        CTkLabel(home, text="🧠 Doomsday Trainer", font=("Arial", 42, "bold")).pack(pady=40)
         
         btn_f = CTkFrame(home, fg_color="transparent")
         btn_f.pack(pady=10)

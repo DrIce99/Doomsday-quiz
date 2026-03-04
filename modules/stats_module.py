@@ -74,7 +74,7 @@ class StatsFrame(CTkFrame):
         self.group_opt = CTkOptionMenu(self.side, values=["Nessuno", "Giorno", "Settimana"], command=lambda _: self.refresh_all())
         self.group_opt.set("Giorno"); self.group_opt.pack(pady=5)
 
-        self.stats_box = CTkTextbox(self.side, width=300, height=300, font=("Consolas", 12))
+        self.stats_box = CTkTextbox(self.side, width=300, height=400, font=("Consolas", 12))
         self.stats_box.pack(pady=10, padx=10)
         
         # 4. Area Grafico
@@ -156,7 +156,7 @@ class StatsFrame(CTkFrame):
         self.stats_box.insert("end", txt); self.stats_box.configure(state="disabled")
 
         all_conds = load_conditions()
-        impacts, g_avg = calculate_impacts(data, all_conds)
+        impacts, g_avg, w_sign = calculate_impacts(data, all_conds)
 
         recent_avg, today_avg, perc, margine, sign = calculate_trend_metrics(data)
 
@@ -165,10 +165,13 @@ class StatsFrame(CTkFrame):
             for imp in impacts:
                 # Colore/Simbolo in base al peggioramento o miglioramento
                 # Se diff > 0 significa che ci metti più tempo (peggio)
-                icon = "⚠️" if imp["diff"] > 0 else "🚀"
-                sign = "+" if imp["diff"] > 0 else ""
-                txt += f"{icon} {imp['label']}: {imp['avg']:.1f}s ({sign}{imp['diff']:.1f}s)\n"
+                t_icon = "⚠️" if imp["diff_time"] > 0 else "🚀"
+                
+                t_sign = "+" if imp["diff_time"] > 0 else ""
+                w_sign = "+" if imp["diff_wr"] > 0 else ""
+                txt += f"{t_icon} {imp['label']}: {imp['avg']:.1f}s ({t_sign}{imp['diff_time']:.1f}s)\n"
                 txt += f"   (su {imp['count']} sessioni)\n"
+                txt += f"   (winrate: {imp['wr']:.0f}% ({w_sign}{imp['diff_wr']:.1f}%)\n\n"
         
         txt += f"\nTREND RECENTE (7gg): {recent_avg:.1f}s\n"
         txt += f"PERFORMANCE OGGI: {today_avg:.1f}s ({sign}{perc:.1f}%)\n"

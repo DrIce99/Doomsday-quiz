@@ -1314,5 +1314,82 @@
         "difficulty": "facile",
         "time": 6.86,
         "correct": true
+    },
+    {
+        "timestamp": "2026-03-04 10:52:37",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 5.56,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-04 10:52:39",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 1.19,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-04 10:52:44",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 3.67,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-04 10:52:52",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 7.21,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-04 10:52:58",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 5.17,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-04 10:53:01",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 2.43,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-04 10:54:03",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 21.86,
+        "correct": false
+    },
+    {
+        "timestamp": "2026-03-04 10:54:30",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 22.1,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-04 10:54:39",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 7.86,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-04 10:55:04",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 23.47,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-04 10:55:25",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 18.84,
+        "correct": false
     }
 ]
