@@ -280,18 +280,18 @@ class StatsFrame(CTkFrame):
             last_dt = curr_dt
 
         ax1.tick_params(axis='x', rotation=35, labelsize=7)
-        fig.tight_layout()
         canvas = FigureCanvasTkAgg(fig, master=self.chart_c)
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True)
         
         # Asse Sinistro: Tempo (Linea Gialla)
         if plot_y_temps:
-            ax1.plot(plot_keys,
+            tempo_line, = ax1.plot(plot_keys,
                     plot_y_temps,
                     color='yellow',
                     linewidth=2,
-                    label="Tempo")
+                    label="Tempo",
+                    picker=5)
 
             # --- PALLINI SOLO SE NON CONTINUA ---
             if not self.sw_continuity.get():
@@ -314,12 +314,15 @@ class StatsFrame(CTkFrame):
     
         # --- MEDIA MOBILE (Trend di miglioramento) ---
         window = 5 # Calcola la media ogni 5 sessioni
+        valid_temps = [t for t in plot_y_temps if t is not None]
         if len(plot_y_temps) > window:
             # Calcoliamo la media mobile semplice
-            sma = [sum(plot_y_temps[i-window:i])/window for i in range(window, len(plot_y_temps)+1)]
+            sma = [sum(valid_temps[i-window:i])/window for i in range(window, len(valid_temps)+1)]
             # La plottiamo sopra la linea gialla
-            ax1.plot(plot_keys[window-1:], sma, color='#3498db', 
-                    linestyle=':', linewidth=2, label="Trend (SMA 5)")
+            valid_keys = [plot_keys[i] for i in range(len(plot_y_temps)) if plot_y_temps[i] is not None]
+            
+            ax1.plot(valid_keys[window-1:], sma, color='#3498db', 
+                linestyle=':', linewidth=2, label="Trend (SMA 5)")
 
         # Asse Destro: Winrate % (Linea Verde)
         ax2 = ax1.twinx()
@@ -331,7 +334,53 @@ class StatsFrame(CTkFrame):
             ax2.set_ylim(0, 110)
         
         ax1.tick_params(axis='x', rotation=35, labelsize=7)
-        fig.tight_layout()
+        
+        # --- LEGENDA UNIFICATA ---
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax1.legend(lines1 + lines2, labels1 + labels2, 
+                   loc='upper center', bbox_to_anchor=(0.5, -0.15),
+                   ncol=3, fontsize=8, frameon=False)
+        
+        # --- LOGICA HOVER (TOOLTIP) ---
+        annot = ax1.annotate("", xy=(0,0), xytext=(10,10),
+                            textcoords="offset points",
+                            bbox=dict(boxstyle="round", fc="#2b2b2b", ec="yellow", alpha=0.9),
+                            arrowprops=dict(arrowstyle="->", color='white'),
+                            color="white", fontsize=9)
+        annot.set_visible(False)
+        
+        def update_annot(ind, line):
+            x, y = line.get_data()
+            idx = ind["ind"][0]
+            annot.xy = (x[idx], y[idx])
+            
+            # Recuperiamo i dati corretti per quel punto
+            data_label = plot_keys[idx]
+            tempo_val = plot_y_temps[idx]
+            wr_val = plot_y_winrate[idx]
+            
+            text = f"Data: {data_label}\n⏱️ Tempo: {tempo_val:.2f}s\n🎯 Winrate: {wr_val:.1f}%"
+            annot.set_text(text)
+
+        def hover(event):
+            vis = annot.get_visible()
+            if event.inaxes == ax1:
+                # Controlliamo la linea del tempo (la gialla)
+                cont, ind = tempo_line.contains(event)
+                if cont:
+                    update_annot(ind, tempo_line)
+                    annot.set_visible(True)
+                    canvas.draw_idle()
+                else:
+                    if vis:
+                        annot.set_visible(False)
+                        canvas.draw_idle()
+
+        # Colleghiamo l'evento al canvas
+        canvas.mpl_connect("motion_notify_event", hover)
+        
+        fig.subplots_adjust(bottom=0.25)
 
     def open_calendar(self):
         CalendarPicker(self, self.selected_date_str, self.on_date_selected)
