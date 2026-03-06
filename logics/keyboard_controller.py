@@ -10,7 +10,7 @@ class KeyboardInputManager:
         self.callback_next = callback_next
         self.confirm_required = confirm_required
         self.current_selection = None
-        self.btn_map = {} # Mappa valore -> widget bottone
+        self.btn_map = {}
 
     def setup_map(self, buttons_dict):
         """Associa i valori (0-6) ai widget CTkButton per l'effetto hover"""
@@ -30,14 +30,17 @@ class KeyboardInputManager:
 
     def _handle_input(self, value):
         if not self.confirm_required:
-            # Invio immediato
             self.callback_check(value)
         else:
-            # Logica di pre-selezione (Scalabile)
+            # Reset immediato delle selezioni precedenti
             self._reset_button_effects()
-            self.current_selection = value
+            
             if value in self.btn_map:
-                self.btn_map[value]._on_enter() # Simula hover CTk
+                self.current_selection = value
+                self.btn_map[value].configure(
+                    border_width=5, 
+                    border_color="#f1c40f" # Giallo acceso
+                )
 
     def _confirm_selection(self, event=None):
         if self.confirm_required and self.current_selection is not None:
@@ -48,8 +51,11 @@ class KeyboardInputManager:
 
     def _reset_button_effects(self):
         for btn in self.btn_map.values():
-            btn._on_leave() # Rimuove effetto hover CTk
+            if btn.winfo_exists(): # Sicurezza anti-crash
+                btn.configure(border_width=0)
             
     def _handle_space(self, event=None):
         if self.callback_next:
+            self._reset_button_effects() # Pulizia bordi rimasti
+            self.current_selection = None # Pulizia selezione logica
             self.callback_next()

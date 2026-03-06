@@ -1,7 +1,7 @@
 from customtkinter import *
 import random, time, json, os
 from datetime import date
-from keyboard_controller import KeyboardInputManager
+from logics.keyboard_controller import KeyboardInputManager
 
 def is_leap(y): return y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)
 
@@ -108,6 +108,26 @@ class QuizFrame(CTkFrame):
 
         # Configurazione pesi griglia per centratura
         self.main_game_container.columnconfigure((0,2), weight=1)
+        
+        def load_confirm_pref():
+            try:
+                with open("config.json", "r") as f:
+                    return json.load(f).get("confirm_required", False)
+            except:
+                return False
+
+        self.kbd = KeyboardInputManager(
+            self.winfo_toplevel(), 
+            self.check_answer, 
+            self.new_question,
+            confirm_required=load_confirm_pref()
+        )
+        
+        self.kbd.setup_map(self.btns_dict)
+        self.kbd.bind_keys()
+
+        self.focus_set()
+        self.winfo_toplevel().focus_force()
 
     def update_settings(self, _=None):
         self.mode = self.seg_mode.get()
@@ -143,6 +163,10 @@ class QuizFrame(CTkFrame):
         self.lbl_q.configure(text=f"{d:02d}/{m:02d}/{y}" if self.mode == "Giorno Preciso" else f"Anno: {y}")
         self.start_time = time.perf_counter(); self.running = True
         self.update_clock()
+        
+        if hasattr(self, "kbd"):
+            self.kbd._reset_button_effects()
+            self.kbd.current_selection = None
 
     def check_answer(self, guess):
         if not self.running or not self.game_started: return

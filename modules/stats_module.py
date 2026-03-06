@@ -166,12 +166,13 @@ class StatsFrame(CTkFrame):
                 # Colore/Simbolo in base al peggioramento o miglioramento
                 # Se diff > 0 significa che ci metti più tempo (peggio)
                 t_icon = "⚠️" if imp["diff_time"] > 0 else "🚀"
+                w_icon = "📈" if imp["diff_wr"] >= 0 else "📉"
                 
                 t_sign = "+" if imp["diff_time"] > 0 else ""
                 w_sign = "+" if imp["diff_wr"] > 0 else ""
                 txt += f"{t_icon} {imp['label']}: {imp['avg']:.1f}s ({t_sign}{imp['diff_time']:.1f}s)\n"
                 txt += f"   (su {imp['count']} sessioni)\n"
-                txt += f"   (winrate: {imp['wr']:.0f}% ({w_sign}{imp['diff_wr']:.1f}%)\n\n"
+                txt += f"{w_icon} (winrate: {imp['wr']:.0f}% ({w_sign}{imp['diff_wr']:.1f}%)\n\n"
         
         txt += f"\nTREND RECENTE (7gg): {recent_avg:.1f}s\n"
         txt += f"PERFORMANCE OGGI: {today_avg:.1f}s ({sign}{perc:.1f}%)\n"
