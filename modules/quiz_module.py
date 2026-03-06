@@ -1,6 +1,7 @@
 from customtkinter import *
 import random, time, json, os
 from datetime import date
+from keyboard_controller import KeyboardInputManager
 
 def is_leap(y): return y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)
 
@@ -56,15 +57,31 @@ class QuizFrame(CTkFrame):
         self.grid_btns = CTkFrame(self.col_mid, fg_color="transparent")
         self.grid_btns.pack()
         
-        for i, (val, name) in enumerate([(1,"Lun"),(2,"Mar"),(3,"Mer"),(4,"Gio"),(5,"Ven"),(6,"Sab")]):
-            btn = CTkButton(self.grid_btns, text=name, width=100, height=50, font=("Arial", 13, "bold"), 
+        self.btns_dict = {}
+        
+        giorni = [(1,"Lun"),(2,"Mar"),(3,"Mer"),(4,"Gio"),(5,"Ven"),(6,"Sab")]
+        for i, (val, name) in enumerate(giorni):
+            btn = CTkButton(self.grid_btns, text=name, width=100, height=50, 
+                            font=("Arial", 13, "bold"), 
                             command=lambda v=val: self.check_answer(v))
             btn.grid(row=i//2, column=i%2, padx=5, pady=5)
+            
+            self.btns_dict[val] = btn
         
         self.btn_dom = CTkButton(self.col_mid, text="Domenica (0)", width=210, height=50, 
                                  fg_color="#34495e", command=lambda: self.check_answer(0))
         self.btn_dom.pack(pady=10)
-
+        self.btns_dict[0] = self.btn_dom
+        
+        self.kbd = KeyboardInputManager(
+            self.winfo_toplevel(), 
+            self.check_answer, 
+            callback_next=self.new_question,
+            confirm_required=False
+        )
+        self.kbd.setup_map(self.btns_dict)
+        self.kbd.bind_keys()
+        
         # 3. Colonna Destra (Ragionamento Giorno)
         self.col_right = CTkFrame(self.main_game_container, width=250, fg_color="#2b2b2b", corner_radius=10)
         self.col_right.grid(row=0, column=2, padx=10, sticky="nsew")
