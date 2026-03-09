@@ -65,11 +65,11 @@ L'interfaccia è costruita con Colori Adattivi: ogni testo, pulsante e grafico s
    1. Clona la repository.
    2. Installa le dipendenze:
    
-        pip install customtkinter matplotlib
+            pip install customtkinter matplotlib
    
    3. Avvia l'applicazione:
    
-        python game.py
+            python game.py
    
    
 <br>
