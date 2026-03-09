@@ -271,14 +271,28 @@ class StatsFrame(CTkFrame):
 
         # Separatori
         last_dt = None
+        display_labels = []
+        mode = self.group_opt.get()
         for i, k in enumerate(plot_keys):
             curr_dt = plot_dates_dict.get(k)
+            if mode == "Nessuno" and curr_dt:
+                # Mostra la data solo se è il primo punto del giorno
+                if last_dt is None or curr_dt.date() != last_dt.date():
+                    display_labels.append(curr_dt.strftime("%d/%m/%y"))
+                else:
+                    display_labels.append("") # Lascia vuoto per i test dello stesso giorno
+            else:
+                display_labels.append(k) # Usa l'etichetta standard per gli altri raggruppamenti
+
             if last_dt and curr_dt:
                 if curr_dt.date() != last_dt.date():
                     ax1.axvline(i - 0.5, color='gray', alpha=0.2)
                 if curr_dt.isocalendar()[1] != last_dt.isocalendar()[1]:
                     ax1.axvline(i - 0.5, color='#555555', alpha=0.6)
             last_dt = curr_dt
+
+        ax1.set_xticks(range(len(plot_keys)))
+        ax1.set_xticklabels(display_labels)
 
         ax1.tick_params(axis='x', rotation=35, labelsize=7)
         canvas = FigureCanvasTkAgg(fig, master=self.chart_c)

@@ -4,6 +4,8 @@ import colorsys
 from customtkinter import *
 
 class ThemeManagerFrame(CTkFrame):
+    current_theme = ''
+    
     def __init__(self, master, home_callback, **kwargs):
         super().__init__(master, **kwargs)
         self.home_callback = home_callback
@@ -34,7 +36,6 @@ class ThemeManagerFrame(CTkFrame):
         btn_bar = CTkFrame(self, fg_color="transparent")
         btn_bar.pack(side="bottom", pady=20, fill="x")
         CTkButton(btn_bar, text="➕ Crea Nuovo Tema", fg_color="#2ecc71", command=self.setup_editor_view).pack(side="left", padx=20, expand=True)
-        CTkButton(btn_bar, text="🏠 Home", command=self.home_callback).pack(side="left", padx=20, expand=True)
 
     def setup_editor_view(self):
         for w in self.winfo_children(): w.destroy()
@@ -230,3 +231,5 @@ class ThemeManagerFrame(CTkFrame):
         set_default_color_theme(theme_path)
         save_last_theme(theme_path) # Salva nel config.json
         self.home_callback()
+        
+        ThemeManagerFrame.current_theme = theme_path

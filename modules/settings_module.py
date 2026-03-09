@@ -1,7 +1,7 @@
 from customtkinter import *
 import json
 import os
-from managers.theme_manager import ThemeManagerFrame # Assicurati che l'import sia corretto
+from managers.theme_manager import ThemeManagerFrame
 
 CONFIG_FILE = "config.json"
 
@@ -45,9 +45,17 @@ class SettingsFrame(CTkFrame):
     def load_config(self):
         if os.path.exists(CONFIG_FILE):
             with open(CONFIG_FILE, "r") as f:
-                try: return json.load(f)
-                except: pass
-        return {"last_theme": "blue", "confirm_required": False}
+                try:
+                    cfg = json.load(f)
+                except:
+                    cfg = {}
+        else:
+            cfg = {}
+
+        cfg.setdefault("last_theme", "blue")
+        cfg.setdefault("confirm_required", False)
+
+        return cfg
 
     def show_category(self, name):
         for child in self.content_frame.winfo_children():
@@ -87,6 +95,7 @@ class SettingsFrame(CTkFrame):
         self.config[key] = value
 
     def exit_settings(self):
+        self.config["last_theme"] = ThemeManagerFrame.current_theme
         with open(CONFIG_FILE, "w") as f:
             json.dump(self.config, f, indent=4)
         self.home_callback()

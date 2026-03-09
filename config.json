@@ -1,4 +1,4 @@
 {
-    "last_theme": "themes/user/Frost_holo.json",
-    "confirm_required": 1
+    "confirm_required": false,
+    "last_theme": "blue"
 }
