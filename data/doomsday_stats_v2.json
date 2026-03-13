@@ -2042,5 +2042,96 @@
         "difficulty": "facile",
         "time": 10.6,
         "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:38:22",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 12.13,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:38:31",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 6.66,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:38:40",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 7.65,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:38:45",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 2.62,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:43:27",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 9.87,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:44:50",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 13.07,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:45:00",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 7.33,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:45:21",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 20.35,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:48:22",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 11.49,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:48:31",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 6.84,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:48:40",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 8.43,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:48:55",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 11.96,
+        "correct": true
+    },
+    {
+        "timestamp": "2026-03-13 14:49:52",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 15.69,
+        "correct": false
     }
 ]
