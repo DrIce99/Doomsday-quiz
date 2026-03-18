@@ -8,7 +8,7 @@ DEFAULT_CONDITIONS = {
     "Stanchezza": "#f39c12", # Arancione
     "Malattia": "#e74c3c",   # Rosso
     "Focus Alto": "#2ecc71", # Verde
-    "Stress": "#9b59b6",     # Viola
+    "Streak loss": "#9b59b6",     # Viola
     "Test nuove strategie": "#01f958"
 }
 
