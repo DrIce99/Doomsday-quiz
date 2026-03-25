@@ -224,14 +224,29 @@ class QuizFrame(CTkFrame):
         self.lbl_final_res.configure(text=res_text, text_color=res_color)
         self.btn_next.pack(pady=10)
         
-        self.save_data(self.mode, self.difficulty, round(time.perf_counter() - self.start_time, 2), is_c)
+        self.save_data(self.mode, self.difficulty, round(time.perf_counter() - self.start_time, 2), is_c, target_date.strftime("%Y-%m-%d"))
 
 
-    def save_data(self, m, d, t, c):
+    def save_data(self, m, d, t, c, td):
         data = []
         if os.path.exists("data/doomsday_stats_v2.json"):
             with open("data/doomsday_stats_v2.json", "r") as f: data = json.load(f)
-        data.append({"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "mode": m, "difficulty": d, "time": t, "correct": c})
+        
+        if m == "Solo Doomsday":
+            # Salviamo solo l'anno (es: "2024")
+            target_val = str(td.year)
+        else:
+            # Salviamo la data completa ISO (es: "2024-05-15")
+            target_val = td.strftime("%Y-%m-%d")
+            
+        data.append({
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), 
+            "mode": m, 
+            "difficulty": d, 
+            "time": t, 
+            "correct": c,
+            "target_date": target_val
+        })
         with open("data/doomsday_stats_v2.json", "w") as f: json.dump(data, f, indent=4)
 
     def update_clock(self):

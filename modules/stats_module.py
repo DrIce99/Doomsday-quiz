@@ -8,6 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from managers.condition_manager import *
 from logics.logic_impact import *
 from utils.calendar_util import CalendarPicker
+from utils.anchor_day import get_anchor_day
 
 def calculate_doomsday_odd11(y):
     anchor = {0: 2, 1: 0, 2: 5, 3: 3}[(y // 100) % 4]
@@ -77,9 +78,16 @@ class StatsFrame(CTkFrame):
         self.stats_box = CTkTextbox(self.side, width=300, height=400, font=("Consolas", 12))
         self.stats_box.pack(pady=10, padx=10)
         
-        # 4. Area Grafico
-        self.chart_c = CTkFrame(self.main_c, fg_color="#1e1e1e")
-        self.chart_c.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+        # 4. Area Grafico trasformata in Tabview (Stile VS Code)
+        self.chart_tabs = CTkTabview(self.main_c, fg_color="#1e1e1e", segmented_button_selected_color="#1f538d")
+        self.chart_tabs.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+        
+        # Creiamo le schede
+        self.tab_temp = self.chart_tabs.add("Andamento Temporale")
+        self.tab_dist = self.chart_tabs.add("Distanza Mentale")
+        
+        # Impostiamo la tab di default
+        self.chart_tabs.set("Andamento Temporale")
 
     def update_f(self, _=None):
         self.filter_mode = self.seg_m.get()
@@ -97,13 +105,17 @@ class StatsFrame(CTkFrame):
 
     def refresh_all(self):
         plt.close('all') 
-        for w in self.chart_c.winfo_children():
-            w.destroy()
+        for tab_name in ["Distanza Mentale", "Andamento Temporale"]:
+            tab_obj = self.chart_tabs.tab(tab_name)
+            for w in tab_obj.winfo_children():
+                w.destroy()
         if not os.path.exists("data/doomsday_stats_v2.json"): return
         with open("data/doomsday_stats_v2.json", "r") as f: all_data = json.load(f)
         
         # 1. FILTRO PER MODALITÀ E DIFFICOLTÀ
         data = [d for d in all_data if d["mode"] == self.filter_mode and d["difficulty"] == self.filter_diff]
+        
+        data_con_target = [d for d in data if d.get("target_date") is not None]
         
         # 2. FILTRO TEMPORALE (Basato su View e Navigazione)
         view = self.view_opt.get()
@@ -184,7 +196,8 @@ class StatsFrame(CTkFrame):
         self.stats_box.configure(state="disabled")
 
         # --- GRAFICO ---
-        for w in self.chart_c.winfo_children(): w.destroy()
+        target_tab = self.chart_tabs.tab("Andamento Temporale")
+        for w in target_tab.winfo_children(): w.destroy()
         plt.style.use('dark_background')
         fig, ax1 = plt.subplots(figsize=(5, 4), dpi=100)
         fig.patch.set_facecolor('#1e1e1e'); ax1.set_facecolor('#1e1e1e')
@@ -295,7 +308,7 @@ class StatsFrame(CTkFrame):
         ax1.set_xticklabels(display_labels)
 
         ax1.tick_params(axis='x', rotation=35, labelsize=7)
-        canvas = FigureCanvasTkAgg(fig, master=self.chart_c)
+        canvas = FigureCanvasTkAgg(fig, master=target_tab)
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True)
         
@@ -364,6 +377,14 @@ class StatsFrame(CTkFrame):
                             arrowprops=dict(arrowstyle="->", color='white'),
                             color="white", fontsize=9)
         annot.set_visible(False)
+        
+        if data_con_target:
+            self.plot_mental_distance_impact(data_con_target, master=self.chart_tabs.tab("Distanza Mentale"))
+        else:
+            # Mostra un messaggio o un grafico vuoto se ci sono solo vecchi dati
+            CTkLabel(self.chart_tabs.tab("Distanza Mentale"), 
+                     text="Dati target_date mancanti.\nGioca per sbloccare l'analisi!",
+                     text_color="gray").pack(expand=True)
         
         def update_annot(ind, line):
             x, y = line.get_data()
@@ -455,3 +476,91 @@ class StatsFrame(CTkFrame):
             perc = (diff / recent_avg) * 100
             return today_avg, recent_avg, diff, perc
         return None
+    
+    def plot_mental_distance_impact(self, data_subset, master):
+        from collections import defaultdict
+        import numpy as np
+
+        # 1. Raggruppamento dati per distanza
+        stats_per_dist = defaultdict(lambda: {"times": [], "corrects": 0, "total": 0, "dates": []})
+        
+        for d in data_subset:
+            target_str = d.get("target_date")
+            if not target_str or len(target_str) < 10: continue
+            try:
+                t_dt = datetime.strptime(target_str, "%Y-%m-%d")
+                anchor = get_anchor_day(t_dt.month, t_dt.year)
+                dist = abs(t_dt.day - anchor)
+                
+                stats_per_dist[dist]["total"] += 1
+                stats_per_dist[dist]["dates"].append(t_dt.strftime('%d/%m'))
+                if d["correct"]:
+                    stats_per_dist[dist]["corrects"] += 1
+                    stats_per_dist[dist]["times"].append(d["time"])
+            except: continue
+
+        if not stats_per_dist: return
+
+        # 2. Ordinamento per distanza (Asse X)
+        sorted_distances = sorted(stats_per_dist.keys())
+        avg_times = []
+        winrates = []
+        hover_labels = []
+
+        for dist in sorted_distances:
+            s = stats_per_dist[dist]
+            # Media tempo (solo se ci sono risposte corrette)
+            avg_t = sum(s["times"])/len(s["times"]) if s["times"] else 0
+            # Winrate in percentuale
+            wr = (s["corrects"] / s["total"]) * 100
+            
+            avg_times.append(avg_t)
+            winrates.append(wr)
+            hover_labels.append(
+                f"Dist: {dist}gg\nWinrate: {wr:.0f}%\nMedia: {avg_t:.1f}s\nCampioni: {s['total']}"
+            )
+
+        # 3. Creazione Grafico a Doppio Asse
+        fig, ax1 = plt.subplots(figsize=(6, 4), facecolor='#1e1e1e')
+        ax1.set_facecolor('#1e1e1e')
+        
+        # ASSE 1: Tempo di risposta (Barre o Scatter)
+        ax1.bar(sorted_distances, avg_times, color='#3498db', alpha=0.3, label="Tempo Medio")
+        sc = ax1.scatter(sorted_distances, avg_times, color='#3498db', s=50, edgecolors="white")
+        ax1.set_xlabel("Distanza dall'Ancora (Giorni)", color='white')
+        ax1.set_ylabel("Tempo Medio (s)", color='#3498db')
+        ax1.tick_params(axis='y', labelcolor='#3498db')
+
+        # ASSE 2: Winrate (Linea sovrapposta)
+        ax2 = ax1.twinx()
+        line_wr, = ax2.plot(sorted_distances, winrates, color='#e74c3c', linestyle=':', linewidth=1, label="Winrate %")
+        ax2.set_ylabel("Winrate %", color='#e74c3c')
+        ax2.set_ylim(0, 105)
+        ax2.tick_params(axis='y', labelcolor='#e74c3c')
+
+        # 4. Gestione Hover
+        annot = ax1.annotate("", xy=(0,0), xytext=(15,15), textcoords="offset points",
+                            bbox=dict(boxstyle="round", fc="#2b2b2b", ec="white", lw=1),
+                            color="white", fontsize=9, zorder=10)
+        annot.set_visible(False)
+
+        def on_hover(event):
+            if event.inaxes in [ax1, ax2]:
+                cont, ind = sc.contains(event)
+                if cont:
+                    pos = sc.get_offsets()[ind["ind"][0]]
+                    annot.xy = pos
+                    annot.set_text(hover_labels[ind["ind"][0]])
+                    annot.set_visible(True)
+                    fig.canvas.draw_idle()
+                else:
+                    if annot.get_visible():
+                        annot.set_visible(False)
+                        fig.canvas.draw_idle()
+
+        fig.canvas.mpl_connect("motion_notify_event", on_hover)
+        plt.title("Analisi Difficoltà Mentale", color='white', pad=15)
+        
+        canvas = FigureCanvasTkAgg(fig, master=master)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True, padx=5, pady=5)
