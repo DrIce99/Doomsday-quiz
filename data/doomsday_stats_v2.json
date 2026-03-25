@@ -2606,5 +2606,85 @@
         "time": 5.02,
         "correct": true,
         "target_date": "2056"
+    },
+    {
+        "timestamp": "2026-03-25 10:33:13",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 4.98,
+        "correct": true,
+        "target_date": "2068"
+    },
+    {
+        "timestamp": "2026-03-25 10:34:54",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 5.97,
+        "correct": true,
+        "target_date": "2064"
+    },
+    {
+        "timestamp": "2026-03-25 10:35:15",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 7.51,
+        "correct": false,
+        "target_date": "2094"
+    },
+    {
+        "timestamp": "2026-03-25 10:55:22",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 4.8,
+        "correct": true,
+        "target_date": "2001"
+    },
+    {
+        "timestamp": "2026-03-25 10:55:29",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 4.88,
+        "correct": true,
+        "target_date": "2032"
+    },
+    {
+        "timestamp": "2026-03-25 10:55:38",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 7.39,
+        "correct": true,
+        "target_date": "2025"
+    },
+    {
+        "timestamp": "2026-03-25 10:55:45",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 3.48,
+        "correct": true,
+        "target_date": "2064"
+    },
+    {
+        "timestamp": "2026-03-25 10:55:50",
+        "mode": "Solo Doomsday",
+        "difficulty": "facile",
+        "time": 3.92,
+        "correct": true,
+        "target_date": "2091"
+    },
+    {
+        "timestamp": "2026-03-25 11:05:45",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 9.37,
+        "correct": true,
+        "target_date": "2052-04-14"
+    },
+    {
+        "timestamp": "2026-03-25 11:05:55",
+        "mode": "Giorno Preciso",
+        "difficulty": "facile",
+        "time": 8.26,
+        "correct": true,
+        "target_date": "2070-11-14"
     }
 ]

@@ -28,6 +28,7 @@ class StatsFrame(CTkFrame):
         self.configure(fg_color="transparent")
         self.filter_mode = "Giorno Preciso"
         self.filter_diff = "facile"
+        self.days_names = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"]
         self.setup_ui()
         self.refresh_all()
 
@@ -84,6 +85,7 @@ class StatsFrame(CTkFrame):
         
         # Creiamo le schede
         self.tab_temp = self.chart_tabs.add("Andamento Temporale")
+        self.tab_doomsday = self.chart_tabs.add("Performance Doomsday")
         self.tab_dist = self.chart_tabs.add("Distanza Mentale")
         
         # Impostiamo la tab di default
@@ -105,10 +107,11 @@ class StatsFrame(CTkFrame):
 
     def refresh_all(self):
         plt.close('all') 
-        for tab_name in ["Distanza Mentale", "Andamento Temporale"]:
+        for tab_name in ["Distanza Mentale", "Performance Doomsday", "Andamento Temporale"]:
             tab_obj = self.chart_tabs.tab(tab_name)
             for w in tab_obj.winfo_children():
                 w.destroy()
+                
         if not os.path.exists("data/doomsday_stats_v2.json"): return
         with open("data/doomsday_stats_v2.json", "r") as f: all_data = json.load(f)
         
@@ -386,6 +389,8 @@ class StatsFrame(CTkFrame):
                      text="Dati target_date mancanti.\nGioca per sbloccare l'analisi!",
                      text_color="gray").pack(expand=True)
         
+        self.plot_doomsday_performance(all_data, master=self.chart_tabs.tab("Performance Doomsday"))
+        
         def update_annot(ind, line):
             x, y = line.get_data()
             idx = ind["ind"][0]
@@ -486,7 +491,10 @@ class StatsFrame(CTkFrame):
         
         for d in data_subset:
             target_str = d.get("target_date")
-            if not target_str or len(target_str) < 10: continue
+            
+            if d.get("mode") != "Giorno Preciso" or not target_str: 
+                continue
+            
             try:
                 t_dt = datetime.strptime(target_str, "%Y-%m-%d")
                 anchor = get_anchor_day(t_dt.month, t_dt.year)
@@ -561,6 +569,48 @@ class StatsFrame(CTkFrame):
         fig.canvas.mpl_connect("motion_notify_event", on_hover)
         plt.title("Analisi Difficoltà Mentale", color='white', pad=15)
         
+        canvas = FigureCanvasTkAgg(fig, master=master)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True, padx=5, pady=5)
+
+    def plot_doomsday_performance(self, data_subset, master):
+        from collections import defaultdict
+        # nomi_giorni = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]
+        nomi_giorni = self.days_names # Usa quelli della tua classe se sono 0=Dom o 0=Lun
+
+        perf_per_day = defaultdict(list)
+        
+        for d in data_subset:
+            # Analizziamo solo i dati della modalità "Solo Doomsday" o dove abbiamo il target
+            if d.get("mode") == "Solo Doomsday" and d["correct"]:
+                try:
+                    # Calcoliamo il Doomsday dell'anno salvato
+                    anno = int(d["target_date"])
+                    dd_val, _ = calculate_doomsday_odd11(anno)
+                    perf_per_day[dd_val].append(d["time"])
+                except: continue
+
+        if not perf_per_day: return
+
+        # Prepariamo i dati per il grafico
+        sorted_days = sorted(perf_per_day.keys())
+        avg_times = [sum(perf_per_day[day])/len(perf_per_day[day]) for day in sorted_days]
+        labels = [nomi_giorni[day] for day in sorted_days]
+
+        fig, ax = plt.subplots(figsize=(5, 4), facecolor='#1e1e1e')
+        ax.set_facecolor('#1e1e1e')
+        
+        bars = ax.bar(labels, avg_times, color='#9b59b6', alpha=0.7)
+        ax.set_title("Velocità Media per Giorno Doomsday", color='white')
+        ax.set_ylabel("Secondi", color='white')
+        ax.tick_params(colors='white')
+
+        # Aggiungi etichette sopra le barre
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{height:.1f}s', ha='center', va='bottom', color='white', fontsize=8)
+
         canvas = FigureCanvasTkAgg(fig, master=master)
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True, padx=5, pady=5)

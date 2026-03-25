@@ -224,7 +224,7 @@ class QuizFrame(CTkFrame):
         self.lbl_final_res.configure(text=res_text, text_color=res_color)
         self.btn_next.pack(pady=10)
         
-        self.save_data(self.mode, self.difficulty, round(time.perf_counter() - self.start_time, 2), is_c, target_date.strftime("%Y-%m-%d"))
+        self.save_data(self.mode, self.difficulty, round(time.perf_counter() - self.start_time, 2), is_c, target_date)
 
 
     def save_data(self, m, d, t, c, td):
@@ -234,7 +234,7 @@ class QuizFrame(CTkFrame):
         
         if m == "Solo Doomsday":
             # Salviamo solo l'anno (es: "2024")
-            target_val = str(td.year)
+            target_val = td.strftime("%Y")
         else:
             # Salviamo la data completa ISO (es: "2024-05-15")
             target_val = td.strftime("%Y-%m-%d")
